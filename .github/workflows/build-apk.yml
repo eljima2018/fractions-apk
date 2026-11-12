@@ -26,6 +26,21 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Prepare web files
+        run: |
+          mkdir -p www
+          if [ ! -f www/index.html ]; then
+            f=$(find . -name index.html -not -path "./node_modules/*" -not -path "./android/*" -not -path "./www/*" | head -n 1)
+            if [ -z "$f" ]; then
+              echo "index.html NOT FOUND. Files in repo:"
+              find . -type f -not -path "./.git/*"
+              exit 1
+            fi
+            echo "Found: $f"
+            cp "$f" www/index.html
+          fi
+          ls -la www
+
       - name: Install dependencies
         run: npm install
 
