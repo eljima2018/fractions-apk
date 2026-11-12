@@ -36,7 +36,6 @@ jobs:
               find . -type f -not -path "./.git/*"
               exit 1
             fi
-            echo "Found: $f"
             cp "$f" www/index.html
           fi
           ls -la www
@@ -47,6 +46,16 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Make app icon
+        run: |
+          R=android/app/src/main/res
+          rm -rf $R/mipmap-anydpi-v26
+          for s in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            d=${s%%:*}; p=${s##*:}
+            convert -size 192x192 xc:'#3949ab' -fill white -draw "circle 96,96 96,24" -fill '#ffa726' -draw "path 'M 96,96 L 96,24 A 72,72 0 0,1 168,96 Z'" -fill '#66bb6a' -draw "path 'M 96,96 L 168,96 A 72,72 0 0,1 96,168 Z'" -resize ${p}x${p} $R/mipmap-$d/ic_launcher.png
+            cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_round.png
+          done
+
       - name: Sync web files
         run: npx cap sync android
 
@@ -55,9 +64,6 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-
-      - name: Show APK file
-        run: ls -la android/app/build/outputs/apk/debug/
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
